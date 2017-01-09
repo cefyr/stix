@@ -1,2 +1,2 @@
 # stix
-visually keeping count of cable knitting in C with termbox
+visually keeping count of cable knitting in Python with termbox

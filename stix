@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# stix is a cable knitting pattern visualiser that uses termbox
+
+import termbox
+
+max_w = 100
+max_h = 50
+filename = "test.stix"
+
+class Stixbox(termbox.Termbox):
+    def __init__(self):
+        print('termbox pre-super().__init__()')
+        super().__init__()
+       
+        self.clear()
+        self.style = {
+                'default': (termbox.WHITE, termbox.BLACK),
+                'soft': (termbox.WHITE | termbox.BOLD, termbox.BLACK),
+                'hard': (termbox.BLACK, termbox.WHITE),
+                'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
+                }
+
+        lines = [line.rstrip('\n') for line in open(filename)]
+        self.print_msg('file opened, stuff fetched')
+
+        try:
+            self.hardline = int(lines[0])
+        except ValueError:
+            self.hardline = 1
+        self.softline = self.hardline
+        self.print_msg('initline: {}'.format(self.softline))
+        
+        # read the rest to matrix array thingy
+        self.pattern = lines[1:]
+
+        self.draw_screen()
+
+
+    def draw_screen(self):
+        cols = self.width()
+        rows = self.height()
+        #NOTE here we pretend that scrolling is not a thing
+        # possibly move shit from top-down to bottom-up array
+        
+        # draw all the things
+        for r in self.pattern:
+            number = r.index() + 1
+            if self.softline == number and self.hardline == number:
+                self.draw_line(number, 'double')
+            elif self.softline == number:
+                self.draw_line(number, 'soft')
+            elif self.hardline == number:
+                self.draw_line(number, 'hard')
+            else:
+                self.draw_line(number)
+
+        self.present()
+
+
+    def y_row(total, p_row):
+        return total - p_row - 1
+
+
+    def draw_line(self, number, stylename='default'):
+        rows = self.height()
+        for char in self.pattern[y_row(rows, number)]:
+            # apply style
+            (fg, bg) = self.style[stylename]
+            # draw correct char in the right place
+            self.change_cell(char.index(), y_row(rows, number), char, fg, bg)
+            
+
+    def move_line(self, up):
+        old_line = self.softline
+        self.softline += up
+        if self.hardline == old_line:
+            self.draw_line(old_line, 'hard')
+            self.draw_line(self.softline, 'soft')
+        elif self.hardline == self.softline:
+            self.draw_line(old_line, 'default')
+            self.draw_line(self.softline, 'double')
+        else:
+            self.draw_line(old_line, 'default')
+            self.draw_line(self.softline, 'soft')
+        self.print_msg('softline moved: {} -> {}'.format(old_line, self.softline))
+        self.present()
+
+    
+    def reset_line(self, y):
+        rows = self.height()
+        old_line = self.hardline
+        self.hardline = rows - y - 1
+        self.draw_line(old_line, 'soft')
+        self.draw_line(self.hardline, 'hard')
+        self.print_msg('hardline reset: {} -> {}'.format(old_line, self.hardline))
+        self.present()
+        
+    
+    def print_msg(self, msg):
+        bottom = self.height() - 1
+        fg = termbox.WHITE
+        bg = termbox.RED
+        for char in msg:
+            self.change_cell(char.index(), bottom, char, fg, bg)
+        self.present()
+
+
+    def prompt_quit(self):
+        # Here should be some poll event for asking y/N
+        self.close()
+
+def main():
+    print('trying to start')
+    with Stixbox() as ui:
+        ui.running = True
+        print(ui.running)
+        while ui.running:
+            current_event = ui.poll_event()
+            while current_event:
+                (type, ch, key, mod, w, h, x, y) = current_event
+                if type == termbox.EVENT_RESIZE:
+                    ui.draw_screen()
+                if type == termbox.EVENT_KEY:
+                    if key == termbox.KEY_ARROW_UP:
+                        ui.move_line(1)
+                    elif key == termbox.KEY_ARROW_DOWN:
+                        ui.move_line(-1)
+                    elif key == termbox.KEY_ENTER:
+                        ui.reset_line(y)
+                    elif key == termbox.KEY_ESCAPE:
+                        ui.prompt_quit()
+                current_event = ui.poll_event()
+
+
+if __name__ == '__main__':
+    main()
+
+
+#def f(x):
+#    return {
+#        'a': 1,
+#        'b': 2,
+#    }.get(x, 9)    # 9 is default if x not found
+

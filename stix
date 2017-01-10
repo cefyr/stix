@@ -81,7 +81,7 @@ def print_msg(tb, msg):
 
 def prompt_quit(tb):
     # Here should be some poll event for asking y/N
-    tb.close()
+    return True
 
 
 def boxtest(tb):
@@ -111,13 +111,14 @@ def main():
                     print_msg(tb, 'OK --{}'.format(counter))
     #                ui.reset_line(y)
                 elif key == termbox.KEY_ESC:
-                    prompt_quit(tb)
+                    if prompt_quit(tb):
+                        break
             counter +=1
 #    style = {
-#            'default': (tb.WHITE, tb.BLACK),
-#            'soft': (tb.WHITE | tb.BOLD, tb.BLACK),
-#            'hard': (tb.BLACK, tb.WHITE),
-#            'double': (tb.BLACK | tb.BOLD, tb.WHITE)
+#            'default': (termbox.WHITE, termbox.BLACK),
+#            'soft': (termbox.WHITE | termbox.BOLD, termbox.BLACK),
+#            'hard': (termbox.BLACK, termbox.WHITE),
+#            'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
 #            }
 #
 #    lines = [line.rstrip('\n') for line in open(filename)]

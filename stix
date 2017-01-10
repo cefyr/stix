@@ -90,30 +90,29 @@ def boxtest(tb):
     print_msg(tb, 'we get signal, height {} width {}'.format(rows, cols))
 
 def main():
-    tb = termbox.Termbox()
-    tb.clear()
-    boxtest(tb)
-    counter = 0
-    while True:
-        current_event = tb.poll_event()
-        (evtype, char, key, mod, w, h, mx, my) = current_event
-#       if type == tb.EVENT_RESIZE:
-#            ui.draw_screen()
-        if evtype == termbox.EVENT_KEY:
-            if key == termbox.KEY_ARROW_UP:
-                print_msg(tb, 'up up and away! --{}'.format(counter))
-#                ui.move_line(1)
-            elif key == termbox.KEY_ARROW_DOWN:
-                print_msg(tb, 'dooown --{}'.format(counter))
-#                ui.move_line(-1)
-            elif key == termbox.KEY_ENTER:
-                tb.clear()
-                print_msg(tb, 'OK --{}'.format(counter))
-#                ui.reset_line(y)
-            elif key == termbox.KEY_ESC:
-                prompt_quit(tb)
-        counter +=1
-    tb.close()
+    with termbox.Termbox() as tb:
+        tb.clear()
+        boxtest(tb)
+        counter = 0
+        while True:
+            current_event = tb.poll_event()
+            (evtype, char, key, mod, w, h, mx, my) = current_event
+    #       if type == tb.EVENT_RESIZE:
+    #            ui.draw_screen()
+            if evtype == termbox.EVENT_KEY:
+                if key == termbox.KEY_ARROW_UP:
+                    print_msg(tb, 'up up and away! --{}'.format(counter))
+    #                ui.move_line(1)
+                elif key == termbox.KEY_ARROW_DOWN:
+                    print_msg(tb, 'dooown --{}'.format(counter))
+    #                ui.move_line(-1)
+                elif key == termbox.KEY_ENTER:
+                    tb.clear()
+                    print_msg(tb, 'OK --{}'.format(counter))
+    #                ui.reset_line(y)
+                elif key == termbox.KEY_ESC:
+                    prompt_quit(tb)
+            counter +=1
 #    style = {
 #            'default': (tb.WHITE, tb.BLACK),
 #            'soft': (tb.WHITE | tb.BOLD, tb.BLACK),

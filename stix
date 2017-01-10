@@ -3,71 +3,81 @@
 
 import termbox
 
-max_w = 100
-max_h = 50
+#max_w = 100
+#max_h = 50
 filename = "test.stix"
 
    
 
 
-#def draw_screen(pattern):
-#    cols = tb.width()
-#    rows = tb.height()
-#    #NOTE here we pretend that scrolling is not a thing
-#    # possibly move shit from top-down to bottom-up array
-#    
-#    # draw all the things
-#    for r in pattern:
-#        number = r.index() + 1
-#        if softline == number and hardline == number:
-#            draw_line(pattern, number, 'double')
-#        elif softline == number:
-#            draw_line(pattern, number, 'soft')
-#        elif hardline == number:
-#            draw_line(pattern, number, 'hard')
-#        else:
-#            draw_line(pattern, number)
-#
-#    tb.present()
-#
-#
-#def y_row(total, p_row):
-#    return total - p_row - 1
-#
-#
-#def draw_line(pattern, number, stylename='default'):
-#    rows = tb.height()
-#    for char in pattern[y_row(rows, number)]:
-#        # apply style
-#        (fg, bg) = self.style[stylename]
-#        # draw correct char in the right place
-#        self.change_cell(char.index(), y_row(rows, number), char, fg, bg)
-#        
-#
-#def move_line(up):
-#    old_line = softline
-#    softline += up
-#    if hardline == old_line:
-#        draw_line(old_line, 'hard')
-#        draw_line(softline, 'soft')
-#    elif hardline == softline:
-#        draw_line(old_line, 'default')
-#        draw_line(softline, 'double')
-#    else:
-#        draw_line(old_line, 'default')
-#        draw_line(softline, 'soft')
-#    print_msg('softline moved: {} -> {}'.format(old_line, softline))
-#    tb.present()
-#
-#
-#def reset_line(y):
-#    rows = tb.height()
-#    old_line = hardline
-#    hardline = rows - y - 1
-#    draw_line(old_line, 'soft')
-#    draw_line(hardline, 'hard')
-#    print_msg('hardline reset: {} -> {}'.format(old_line, hardline))
-#    tb.present()
+def draw_screen(tb, pattern, style, softline, hardline):
+    cols = tb.width()
+    rows = tb.height()
+    #NOTE here we pretend that scrolling is not a thing
+    # possibly move shit from top-down to bottom-up array
+    
+    # draw all the things
+    for i, r in enumerate(pattern): #TODO find out if r is needed
+        number = i + 1
+        if softline == number and hardline == number:
+            draw_line(tb, pattern, number, style, 'double')
+        elif softline == number:
+            draw_line(tb, pattern, number, style, 'soft')
+        elif hardline == number:
+            draw_line(tb, pattern, number, style, 'hard')
+        else:
+            draw_line(tb, pattern, number, style)
+
+    tb.present()
+
+
+def y_row(total, p_row):
+    return total - p_row - 1
+
+
+def draw_line(tb, pattern, line, style, stylename='default'):
+    rows = tb.height()
+    cols = tb.width()
+    
+    if len(pattern) > y_row(rows, line):
+        for i, char in enumerate(pattern[y_row(rows, line)]):
+            # apply style
+            (fg, bg) = style[stylename]
+            # draw correct char in the right place
+            tb.change_cell(i, y_row(rows, line), ord(char), fg, bg)
+    else:
+        for pos in range(cols):
+            # apply style
+            (fg, bg) = style[stylename]
+            # draw emptiness
+            tb.change_cell(pos, y_row(rows, line), ord(' '), fg, bg)
+            
+        
+
+def move_line(tb, pattern, style, hardline, old_line, up_lines):
+    softline = old_line + up_lines
+    if hardline == old_line:
+        draw_line(tb, pattern, old_line, style, 'hard')
+        draw_line(tb, pattern, softline, style, 'soft')
+    elif hardline == softline:
+        draw_line(tb, pattern, old_line, style, 'default')
+        draw_line(tb, pattern, softline, style, 'double')
+    else:
+        draw_line(tb, pattern, old_line, style, 'default')
+        draw_line(tb, pattern, softline, style, 'soft')
+    print_msg(tb, 'softline: {} -> {}'.format(old_line, softline))
+    tb.present()
+    return softline
+
+
+def reset_line(tb, pattern, style, old_line, new_line):
+    rows = tb.height()
+    hardline = rows - new_line - 1
+    draw_line(tb, pattern, old_line, style, 'soft')
+    draw_line(tb, pattern, hardline, style, 'hard')
+    print_msg(tb, 'hardline reset: {} -> {}'.format(old_line, hardline))
+    tb.present()
+    return hardline
     
 
 def print_msg(tb, msg):
@@ -90,51 +100,51 @@ def boxtest(tb):
     print_msg(tb, 'we get signal, height {} width {}'.format(rows, cols))
 
 def main():
+    lines = [line.rstrip('\n') for line in open(filename)]
+
+    hardline = 1
+    try:
+        hardline = int(lines[0])
+    except ValueError:
+        hardline = 1
+    softline = hardline
+
     with termbox.Termbox() as tb:
+        style = {
+                'default': (termbox.WHITE, termbox.DEFAULT),
+                'soft': (termbox.WHITE | termbox.BOLD, termbox.BLACK),
+                'hard': (termbox.BLACK, termbox.WHITE),
+                'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
+                }
+
         tb.clear()
-        boxtest(tb)
+        print_msg(tb, 'initline: {}'.format(softline))
+        
+        # read the rest to matrix array thingy
+        pattern = lines[1:]
+
+        draw_screen(tb, pattern, style, softline, hardline)
+        #boxtest(tb)
         counter = 0
         while True:
             current_event = tb.poll_event()
             (evtype, char, key, mod, w, h, mx, my) = current_event
-    #       if type == tb.EVENT_RESIZE:
-    #            ui.draw_screen()
-            if evtype == termbox.EVENT_KEY:
+            if evtype == termbox.EVENT_RESIZE:
+                draw_screen(tb, pattern, style, softline, hardline)
+            elif evtype == termbox.EVENT_KEY:
                 if key == termbox.KEY_ARROW_UP:
-                    print_msg(tb, 'up up and away! --{}'.format(counter))
-    #                ui.move_line(1)
+                    print_msg(tb, 'up and away! --{}'.format(counter))
+                    softline = move_line(tb, pattern, style, hardline, softline, 1)
                 elif key == termbox.KEY_ARROW_DOWN:
                     print_msg(tb, 'dooown --{}'.format(counter))
-    #                ui.move_line(-1)
+                    softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
-                    tb.clear()
                     print_msg(tb, 'OK --{}'.format(counter))
-    #                ui.reset_line(y)
+                    hardline = reset_line(tb, pattern, style, hardline, softline)
                 elif key == termbox.KEY_ESC:
                     if prompt_quit(tb):
                         break
             counter +=1
-#    style = {
-#            'default': (termbox.WHITE, termbox.BLACK),
-#            'soft': (termbox.WHITE | termbox.BOLD, termbox.BLACK),
-#            'hard': (termbox.BLACK, termbox.WHITE),
-#            'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
-#            }
-#
-#    lines = [line.rstrip('\n') for line in open(filename)]
-#    print_msg('file opened, stuff fetched')
-#
-#    try:
-#        hardline = int(lines[0])
-#    except ValueError:
-#        hardline = 1
-#    softline = hardline
-#    print_msg('initline: {}'.format(softline))
-#    
-#    # read the rest to matrix array thingy
-#    self.pattern = lines[1:]
-#
-#    draw_screen()
 #    print('trying to start')
 #    with Stixbox() as ui:
 #        ui.running = True

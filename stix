@@ -11,12 +11,11 @@ filename = "test.stix"
 
 
 def draw_screen(tb, pattern, style, softline, hardline):
-    #NOTE here we pretend that scrolling is not a thing
-    # possibly move shit from top-down to bottom-up array
-    
+
     # draw all the things
     for i, r in enumerate(pattern): #TODO find out if r is needed
         number = len(pattern) - i
+        # draw with style
         if softline == number and hardline == number:
             draw_line(tb, pattern, number, style, 'double')
         elif softline == number:
@@ -31,6 +30,10 @@ def draw_screen(tb, pattern, style, softline, hardline):
 
 def row_to_y(pattern, row):
     return len(pattern) - row
+
+
+def y_to_row(pattern, y):
+    return len(pattern - y)
 
 
 def draw_line(tb, pattern, line, style, stylename='default'):
@@ -95,7 +98,17 @@ def print_msg(tb, msg):
 
 def prompt_quit(tb):
     # Here should be some poll event for asking y/N
-    return True
+    prompt = 'Press y to quit'
+    print_msg(tb, prompt)
+    x = len(prompt) + 2
+    y = tb.height() - 1
+    fg = termbox.WHITE
+    bg = termbox.BLACK
+    tb.set_cursor(x, y) 
+    answer = tb.poll_event()
+    (evtype, char, key, mod, w, h, mx, my) = answer
+    if evtype == termbox.EVENT_KEY and char in ['y', 'Y']:
+        return True
 
 
 def main():
@@ -123,8 +136,7 @@ def main():
         pattern = lines[1:]
 
         draw_screen(tb, pattern, style, softline, hardline)
-        #boxtest(tb)
-        counter = 0
+        
         while True:
             current_event = tb.poll_event()
             (evtype, char, key, mod, w, h, mx, my) = current_event
@@ -132,10 +144,8 @@ def main():
                 draw_screen(tb, pattern, style, softline, hardline)
             elif evtype == termbox.EVENT_KEY:
                 if key == termbox.KEY_ARROW_UP:
-                    print_msg(tb, 'up and away! --{}'.format(counter))
                     softline = move_line(tb, pattern, style, hardline, softline, 1)
                 elif key == termbox.KEY_ARROW_DOWN:
-                    print_msg(tb, 'dooown --{}'.format(counter))
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
                     reset_line(tb, pattern, style, hardline, softline)

@@ -11,14 +11,12 @@ filename = "test.stix"
 
 
 def draw_screen(tb, pattern, style, softline, hardline):
-    cols = tb.width()
-    rows = tb.height()
     #NOTE here we pretend that scrolling is not a thing
     # possibly move shit from top-down to bottom-up array
     
     # draw all the things
     for i, r in enumerate(pattern): #TODO find out if r is needed
-        number = i + 1
+        number = len(pattern) - i
         if softline == number and hardline == number:
             draw_line(tb, pattern, number, style, 'double')
         elif softline == number:
@@ -31,27 +29,27 @@ def draw_screen(tb, pattern, style, softline, hardline):
     tb.present()
 
 
-def y_row(total, p_row):
-    return total - p_row - 1
+def row_to_y(pattern, row):
+    return len(pattern) - row
 
 
 def draw_line(tb, pattern, line, style, stylename='default'):
-    rows = tb.height()
     cols = tb.width()
     
-    if len(pattern) > y_row(rows, line):
-        for i, char in enumerate(pattern[y_row(rows, line)]):
-            # apply style
-            (fg, bg) = style[stylename]
-            # draw correct char in the right place
-            tb.change_cell(i, y_row(rows, line), ord(char), fg, bg)
-    else:
+    # Write emptiness if there is more terminal than pattern
+    if len(pattern) < row_to_y(pattern, line):
         for pos in range(cols):
             # apply style
             (fg, bg) = style[stylename]
             # draw emptiness
-            tb.change_cell(pos, y_row(rows, line), ord(' '), fg, bg)
-            
+            tb.change_cell(pos, row_to_y(pattern, line), ord(' '), fg, bg)
+    # Write pattern lines
+    else:
+        for i, char in enumerate(pattern[row_to_y(pattern, line)]):
+            # apply style
+            (fg, bg) = style[stylename]
+            # draw correct char in the right place
+            tb.change_cell(i, row_to_y(pattern, line), ord(char), fg, bg)
         
 
 def move_line(tb, pattern, style, hardline, old_line, up_lines):
@@ -71,13 +69,16 @@ def move_line(tb, pattern, style, hardline, old_line, up_lines):
 
 
 def reset_line(tb, pattern, style, old_line, new_line):
-    rows = tb.height()
-    hardline = rows - new_line - 1
+    # Save new hardline to file
+    file_content = ['{}\n'.format(new_line)] + ['{}\n'.format(line) 
+                                                for line in pattern]
+    with open(filename, 'w') as file:
+        file.writelines(file_content)
+    
     draw_line(tb, pattern, old_line, style, 'soft')
-    draw_line(tb, pattern, hardline, style, 'hard')
-    print_msg(tb, 'hardline reset: {} -> {}'.format(old_line, hardline))
+    draw_line(tb, pattern, new_line, style, 'hard')
+    print_msg(tb, 'hardline reset: {} -> {}'.format(old_line, new_line))
     tb.present()
-    return hardline
     
 
 def print_msg(tb, msg):
@@ -94,11 +95,6 @@ def prompt_quit(tb):
     return True
 
 
-def boxtest(tb):
-    rows = tb.height()
-    cols = tb.width()
-    print_msg(tb, 'we get signal, height {} width {}'.format(rows, cols))
-
 def main():
     lines = [line.rstrip('\n') for line in open(filename)]
 
@@ -112,7 +108,7 @@ def main():
     with termbox.Termbox() as tb:
         style = {
                 'default': (termbox.WHITE, termbox.DEFAULT),
-                'soft': (termbox.WHITE | termbox.BOLD, termbox.BLACK),
+                'soft': (termbox.WHITE | termbox.BOLD, termbox.DEFAULT),
                 'hard': (termbox.BLACK, termbox.WHITE),
                 'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
                 }
@@ -140,40 +136,12 @@ def main():
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
                     print_msg(tb, 'OK --{}'.format(counter))
-                    hardline = reset_line(tb, pattern, style, hardline, softline)
+                    reset_line(tb, pattern, style, hardline, softline)
+                    hardline = softline
                 elif key == termbox.KEY_ESC:
                     if prompt_quit(tb):
                         break
-            counter +=1
-#    print('trying to start')
-#    with Stixbox() as ui:
-#        ui.running = True
-#        print(ui.running)
-#        while ui.running:
-#            current_event = ui.poll_event()
-#            while current_event:
-#                (type, ch, key, mod, w, h, x, y) = current_event
-#                if type == tb.EVENT_RESIZE:
-#                    ui.draw_screen()
-#                if type == tb.EVENT_KEY:
-#                    if key == tb.KEY_ARROW_UP:
-#                        ui.move_line(1)
-#                    elif key == tb.KEY_ARROW_DOWN:
-#                        ui.move_line(-1)
-#                    elif key == tb.KEY_ENTER:
-#                        ui.reset_line(y)
-#                    elif key == tb.KEY_ESCAPE:
-#                        ui.prompt_quit()
-#                current_event = ui.poll_event()
-#
+
 
 if __name__ == '__main__':
     main()
-
-
-#def f(x):
-#    return {
-#        'a': 1,
-#        'b': 2,
-#    }.get(x, 9)    # 9 is default if x not found
-

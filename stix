@@ -54,17 +54,20 @@ def draw_line(tb, pattern, line, style, stylename='default'):
 
 def move_line(tb, pattern, style, hardline, old_line, up_lines):
     softline = old_line + up_lines
-    if hardline == old_line:
-        draw_line(tb, pattern, old_line, style, 'hard')
-        draw_line(tb, pattern, softline, style, 'soft')
-    elif hardline == softline:
-        draw_line(tb, pattern, old_line, style, 'default')
-        draw_line(tb, pattern, softline, style, 'double')
+    if softline > 0 and softline <= len(pattern):
+        if hardline == old_line:
+            draw_line(tb, pattern, old_line, style, 'hard')
+            draw_line(tb, pattern, softline, style, 'soft')
+        elif hardline == softline:
+            draw_line(tb, pattern, old_line, style, 'default')
+            draw_line(tb, pattern, softline, style, 'double')
+        else:
+            draw_line(tb, pattern, old_line, style, 'default')
+            draw_line(tb, pattern, softline, style, 'soft')
+        print_msg(tb, 'softline: {} -> {}'.format(old_line, softline))
+        tb.present()
     else:
-        draw_line(tb, pattern, old_line, style, 'default')
-        draw_line(tb, pattern, softline, style, 'soft')
-    print_msg(tb, 'softline: {} -> {}'.format(old_line, softline))
-    tb.present()
+        softline = old_line
     return softline
 
 
@@ -75,8 +78,8 @@ def reset_line(tb, pattern, style, old_line, new_line):
     with open(filename, 'w') as file:
         file.writelines(file_content)
     
-    draw_line(tb, pattern, old_line, style, 'soft')
-    draw_line(tb, pattern, new_line, style, 'hard')
+    draw_line(tb, pattern, old_line, style, 'default')
+    draw_line(tb, pattern, new_line, style, 'double')
     print_msg(tb, 'hardline reset: {} -> {}'.format(old_line, new_line))
     tb.present()
     
@@ -107,10 +110,10 @@ def main():
 
     with termbox.Termbox() as tb:
         style = {
-                'default': (termbox.WHITE, termbox.DEFAULT),
-                'soft': (termbox.WHITE | termbox.BOLD, termbox.DEFAULT),
-                'hard': (termbox.BLACK, termbox.WHITE),
-                'double': (termbox.BLACK | termbox.BOLD, termbox.WHITE)
+                'default': (termbox.WHITE, termbox.BLACK),
+                'hard': (termbox.RED, termbox.BLACK),
+                'soft': (termbox.BLACK, termbox.WHITE),
+                'double': (termbox.RED, termbox.WHITE)
                 }
 
         tb.clear()
@@ -135,7 +138,6 @@ def main():
                     print_msg(tb, 'dooown --{}'.format(counter))
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
-                    print_msg(tb, 'OK --{}'.format(counter))
                     reset_line(tb, pattern, style, hardline, softline)
                     hardline = softline
                 elif key == termbox.KEY_ESC:

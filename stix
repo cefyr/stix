@@ -81,9 +81,16 @@ def reset_line(filename, tb, pattern, style, old_line, new_line):
         file.writelines(file_content)
     
     draw_line(tb, pattern, old_line, style, 'default')
-    draw_line(tb, pattern, new_line, style, 'double')
+    if new_line + 1 > len(pattern):
+        softline = new_line
+        draw_line(tb, pattern, softline, style, 'double')
+    else:
+        softline = new_line + 1
+        draw_line(tb, pattern, new_line, style, 'hard')
+        draw_line(tb, pattern, softline, style, 'soft')
     print_msg(tb, 'hardline reset: {} -> {}'.format(old_line, new_line))
     tb.present()
+    return new_line, softline
     
 
 def print_msg(tb, msg):
@@ -96,14 +103,13 @@ def print_msg(tb, msg):
 
 
 def prompt_quit(tb):
-    # Here should be some poll event for asking y/N
     prompt = 'Press y to quit'
     print_msg(tb, prompt)
-    x = len(prompt) + 2
-    y = tb.height() - 1
-    fg = termbox.WHITE
-    bg = termbox.BLACK
-    tb.set_cursor(x, y) 
+    #x = len(prompt) + 2
+    #y = tb.height() - 1
+    #fg = termbox.WHITE
+    #bg = termbox.BLACK
+    #tb.set_cursor(x, y) 
     answer = tb.poll_event()
     (evtype, char, key, mod, w, h, mx, my) = answer
     if evtype == termbox.EVENT_KEY and char in ['y', 'Y']:
@@ -152,8 +158,7 @@ def main():
                 elif key == termbox.KEY_ARROW_DOWN:
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
-                    reset_line(filename, tb, pattern, style, hardline, softline)
-                    hardline = softline
+                    hardline, softline = reset_line(filename, tb, pattern, style, hardline, softline)
                 elif key == termbox.KEY_ESC:
                     if prompt_quit(tb):
                         break

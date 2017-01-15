@@ -114,18 +114,23 @@ def prompt_quit(tb):
 
 
 def main():
-    filename = os.path.join(sys.path[0], "test.stix")
+
+    # Show help file if no other file is chosen
+    filename = os.path.join(sys.path[0], "README.md")
+    sysargv_file_exists = False
     if len(sys.argv) > 1:
         if os.path.isfile(sys.argv[1]):
             filename = sys.argv[1]
+            sysargv_file_exists = True
     
     lines = [line.rstrip('\n') for line in open(filename)]
 
     hardline = 1
-    try:
-        hardline = int(lines[0])
-    except ValueError:
-        hardline = 1
+    if sysargv_file_exists:
+        try:
+            hardline = int(lines[0])
+        except ValueError:
+            hardline = 1
     softline = hardline
 
     with termbox.Termbox() as tb:
@@ -155,7 +160,10 @@ def main():
                 elif key == termbox.KEY_ARROW_DOWN:
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
-                    hardline, softline = reset_line(filename, tb, pattern, style, hardline, softline)
+                    if sysargv_file_exists:
+                        hardline, softline = reset_line(filename, tb, pattern, style, hardline, softline)
+                    else:
+                        pass
                 elif key == termbox.KEY_ESC:
                     if prompt_quit(tb):
                         break

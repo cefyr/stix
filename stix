@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # stix is a cable knitting pattern visualiser that uses termbox
 
-import termbox
+import termbox, sys, os
 
 #max_w = 100
 #max_h = 50
-filename = "test.stix"
 
    
 
@@ -74,7 +73,7 @@ def move_line(tb, pattern, style, hardline, old_line, up_lines):
     return softline
 
 
-def reset_line(tb, pattern, style, old_line, new_line):
+def reset_line(filename, tb, pattern, style, old_line, new_line):
     # Save new hardline to file
     file_content = ['{}\n'.format(new_line)] + ['{}\n'.format(line) 
                                                 for line in pattern]
@@ -112,6 +111,11 @@ def prompt_quit(tb):
 
 
 def main():
+    filename = os.path.join(sys.path[0], "test.stix")
+    if len(sys.argv) > 1:
+        if os.path.isfile(sys.argv[1]):
+            filename = sys.argv[1]
+    
     lines = [line.rstrip('\n') for line in open(filename)]
 
     hardline = 1
@@ -148,7 +152,7 @@ def main():
                 elif key == termbox.KEY_ARROW_DOWN:
                     softline = move_line(tb, pattern, style, hardline, softline, -1)
                 elif key == termbox.KEY_ENTER:
-                    reset_line(tb, pattern, style, hardline, softline)
+                    reset_line(filename, tb, pattern, style, hardline, softline)
                     hardline = softline
                 elif key == termbox.KEY_ESC:
                     if prompt_quit(tb):

@@ -17,10 +17,15 @@ Symbol | Translation
   \*   | purl stitch (in front, if in a cable part)
    .   | purl stitch behind, in cable part
    p   | increase to the right (see below)
-   q   | increase to the left (sse below)
+   q   | increase to the left (see below)
    /   | k2tog on RS, p2tog on WS
    \   | s1k1psso (ödhpt) on RS, 2p twisted on WS
    ´   | p2 twisted on RS, s1k1psso (ödhpt) on WS
   \`   | (accent grave) p2tog on RS, k2tog on WS
        | no stitch, blank space added to make the pattern more easily read
 
+### p/q increasing
+After knitting/purling the stitch marked with a q, do the stitch under it as 
+well, either knitting or purling it depending on how the stich will be handled 
+in the next row. The p stitch only differs in that the increase comes before
+the stitch instead of after.

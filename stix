@@ -97,6 +97,8 @@ def print_msg(tb, msg):
     bottom = tb.height() - 1
     fg = termbox.WHITE
     bg = termbox.RED
+    for n in range(tb.width()):
+        tb.change_cell(n, bottom, ord(' '), fg, bg)
     for i, char in enumerate(msg):
         tb.change_cell(i, bottom, ord(char), fg, bg)
     tb.present()
@@ -105,11 +107,6 @@ def print_msg(tb, msg):
 def prompt_quit(tb):
     prompt = 'Press y to quit'
     print_msg(tb, prompt)
-    #x = len(prompt) + 2
-    #y = tb.height() - 1
-    #fg = termbox.WHITE
-    #bg = termbox.BLACK
-    #tb.set_cursor(x, y) 
     answer = tb.poll_event()
     (evtype, char, key, mod, w, h, mx, my) = answer
     if evtype == termbox.EVENT_KEY and char in ['y', 'Y']:

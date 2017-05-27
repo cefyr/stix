@@ -7,7 +7,7 @@ highlight the current row in a knitting pattern and save it when it changes.
 
 ### The .stix format
 Stix needs a text file as an argument. (I like using the .stix extension 
-because it makes it obvious what the file is for. The .stix format means the
+because it makes it obvious what the file is for.) The .stix format means the
 first line of the file is the number of the last finished row of the pattern.
 The rest of the file should contain the pattern, written from the bottom up.
 In theory, this pattern can be written using any kind of language/symbols, but
